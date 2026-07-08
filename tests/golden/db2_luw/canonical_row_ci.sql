@@ -1,0 +1,1 @@
+(COALESCE(VARCHAR(CAST("id" AS BIGINT)), '<NULL>') || '|~|' || COALESCE(UPPER(RTRIM("code")), '<NULL>') || '|~|' || COALESCE(UPPER(RTRIM("name")), '<NULL>') || '|~|' || COALESCE(VARCHAR(CAST("amount" AS DECIMAL(31,6))), '<NULL>'))

@@ -1,0 +1,6 @@
+SELECT COUNT(*) AS cnt
+     , {{ d.hash_slice_sum('row_hash', 1, 8) }} AS sig1
+     , {{ d.hash_slice_sum('row_hash', 9, 8) }} AS sig2
+FROM (
+{{ inner_sql }}
+) dvf_h

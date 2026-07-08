@@ -1,0 +1,1 @@
+(COALESCE(TO_VARCHAR(CAST("id" AS NUMBER(38,0))), '<NULL>') || '|~|' || COALESCE(UPPER(RTRIM("code")), '<NULL>') || '|~|' || COALESCE(UPPER(RTRIM("name")), '<NULL>') || '|~|' || COALESCE(TO_VARCHAR(CAST("amount" AS NUMBER(38,6))), '<NULL>'))

@@ -1,0 +1,55 @@
+# ============================================================================
+# DVF Framework Settings — behavior of the engine itself.
+# Per-validation configuration lives in Delta metadata tables, NOT here.
+# Environment overlay: config/environments/{env}.yaml  |  env vars: DVF__SECTION__KEY
+# ============================================================================
+
+engine:
+  max_parallel: 8                # ThreadPoolExecutor workers
+  query_timeout_s: 900           # per pushdown query
+  retry_max: 2                   # retries for TransientError only
+  retry_backoff_s: 30            # base for exponential backoff
+  tier_thresholds:               # AUTO comparison-tier selection (row counts)
+    small: 100000
+    medium: 50000000
+    large: 1000000000
+  bucket_count: 1024             # LARGE/XLARGE signature buckets per level
+  leaf_threshold: 5000000        # XLARGE drill-down: rows below this -> row-hash compare
+  max_depth: 3                   # XLARGE recursion depth cap
+  small_tier_max_fetch: 250000   # SMALL tier fetch cap before escalating to MEDIUM
+  driver_diff_max_rows: 1000000  # beyond this, MEDIUM hash-diff requires Spark
+  max_mismatch_samples: 100      # full-row samples fetched per validation
+  in_list_batch_size: 500        # keys per pushdown IN-list fetch
+
+audit:
+  batch_rows: 500                # AuditWriter micro-batch size
+  flush_interval_s: 5            # AuditWriter flush cadence
+
+canonical:
+  delimiter: "|~|"               # row-hash concat delimiter
+  null_sentinel: "<NULL>"        # NULL replacement in canonical strings
+  decimal_scale: 6               # fixed render scale for decimals/floats
+  ts_precision: 6                # timestamp fractional digits (0-6)
+
+reporting:
+  formats: [html, excel, json]   # generated after each run
+  output_path: ./dvf_reports     # overlaid per environment (S3 in dev/qa/prod)
+  pdf_enabled: false
+  email:
+    enabled: false
+    method: ses                  # ses | smtp
+    region: us-east-1
+    from_address: dq-noreply@example.com
+    smtp_host: null
+    smtp_port: 25
+    recipients: []               # default; per-group routing via recipients_by_group
+    recipients_by_group: {}      # e.g. {SALES: [a@x.com], FIN: [b@x.com]}
+
+logging:
+  level: INFO
+  json: true                     # structured JSON lines with correlation IDs
+
+retention:
+  audit_days: 180
+  results_days: 90
+  reports_days: 90

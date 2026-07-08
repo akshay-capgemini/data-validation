@@ -1,0 +1,7 @@
+SELECT
+  COUNT(*) AS total_rows
+{% for c in columns %}
+  , SUM(CASE WHEN {{ c.expr }} THEN 1 ELSE 0 END) AS {{ c.alias }}
+{% endfor %}
+FROM {{ ref.from_clause }}
+{% if ref.where %}WHERE {{ ref.where }}{% endif %}

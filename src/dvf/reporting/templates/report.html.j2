@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DVF Report · {{ run.run_id }}</title>
+<style>
+  :root {
+    --pass:#16a34a; --fail:#dc2626; --warn:#d97706; --error:#7f1d1d;
+    --skip:#6b7280; --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --bg:#f8fafc;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+         color:var(--ink); background:var(--bg); }
+  header { background:#0f172a; color:#f1f5f9; padding:20px 28px; }
+  header h1 { margin:0 0 4px; font-size:20px; font-weight:600; }
+  header .meta { color:#94a3b8; font-size:12.5px; }
+  header .meta b { color:#e2e8f0; font-weight:600; }
+  main { max-width:1200px; margin:0 auto; padding:20px 28px 48px; }
+  .cards { display:flex; flex-wrap:wrap; gap:12px; margin:18px 0 26px; }
+  .card { flex:1 1 120px; background:#fff; border:1px solid var(--line); border-radius:10px;
+          padding:14px 16px; border-top:3px solid var(--accent,#0f172a); }
+  .card .num { font-size:26px; font-weight:700; }
+  .card .label { color:var(--muted); font-size:12px; text-transform:uppercase;
+                 letter-spacing:.04em; }
+  h2 { font-size:15px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);
+       margin:26px 0 10px; }
+  details.validation { background:#fff; border:1px solid var(--line); border-radius:10px;
+                       margin-bottom:10px; overflow:hidden; }
+  details.validation > summary { cursor:pointer; list-style:none; display:flex; flex-wrap:wrap;
+       align-items:center; gap:10px; padding:12px 16px; }
+  details.validation > summary::-webkit-details-marker { display:none; }
+  details.validation[open] > summary { border-bottom:1px solid var(--line); }
+  .badge { display:inline-block; min-width:64px; text-align:center; padding:2px 10px;
+           border-radius:999px; color:#fff; font-size:11.5px; font-weight:700;
+           letter-spacing:.03em; }
+  .vid { font-weight:600; }
+  .path { color:var(--muted); font-size:12.5px; }
+  .stats { margin-left:auto; color:var(--muted); font-size:12.5px; white-space:nowrap; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; color:var(--muted); font-weight:600; font-size:11.5px;
+       text-transform:uppercase; letter-spacing:.04em; padding:8px 12px;
+       border-bottom:1px solid var(--line); background:#fafbfc; }
+  td { padding:7px 12px; border-bottom:1px solid #f1f5f9; vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  .num-cell { text-align:right; font-variant-numeric:tabular-nums; }
+  .status-cell { font-weight:700; }
+  .sql-toggle { margin:6px 0 2px; }
+  .sql-toggle summary { cursor:pointer; color:#2563eb; font-size:12px; }
+  pre { background:#0f172a; color:#e2e8f0; padding:10px 12px; border-radius:8px;
+        overflow-x:auto; font-size:12px; margin:6px 0; }
+  .section-label { padding:10px 16px 0; font-size:12px; font-weight:700; color:var(--muted);
+                   text-transform:uppercase; letter-spacing:.05em; }
+  .error-box { margin:10px 16px; padding:10px 12px; border-left:3px solid var(--fail);
+               background:#fef2f2; color:#7f1d1d; font-size:12.5px; border-radius:6px;
+               white-space:pre-wrap; word-break:break-word; }
+  footer { color:var(--muted); font-size:12px; text-align:center; padding:16px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Data Validation &amp; Reconciliation Report</h1>
+  <div class="meta">
+    Run <b>{{ run.run_id }}</b>
+    {% if run.run_name %} · {{ run.run_name }}{% endif %}
+    · {{ run.trigger_type }} · status <b>{{ run.status }}</b>
+    · started {{ run.start_ts }} · {{ '%.1f'|format(run.duration_sec or 0) }}s
+    · dvf {{ run.framework_version or '' }}
+  </div>
+</header>
+<main>
+  <div class="cards">
+    {% for c in cards %}
+    <div class="card" style="--accent:{{ c.color }}">
+      <div class="num">{{ c.value }}</div>
+      <div class="label">{{ c.label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <h2>Validations ({{ validations|length }})</h2>
+  {% for v in validations %}
+  <details class="validation" {% if v.open %}open{% endif %}>
+    <summary>
+      <span class="badge" style="background:{{ v.color }}">{{ v.status }}</span>
+      <span class="vid">{{ v.validation_id }}</span>
+      <span class="path">{{ v.source_label }} &rarr; {{ v.target_label }}</span>
+      <span class="stats">{{ v.rules_passed or 0 }}/{{ v.rules_total or 0 }} rules ·
+        {{ '%.1f'|format(v.duration_sec or 0) }}s
+        {% if v.source_row_count is not none %} · src {{ v.source_row_count }} rows{% endif %}
+        {% if v.target_row_count is not none %} · tgt {{ v.target_row_count }} rows{% endif %}
+      </span>
+    </summary>
+    {% if v.error_message %}<div class="error-box">{{ v.error_message }}</div>{% endif %}
+    {% if v.rule_rows %}
+    <table>
+      <thead><tr>
+        <th>Rule</th><th>Column</th><th>Status</th><th>Source</th><th>Target</th>
+        <th>Difference</th><th>Tolerance</th><th class="num-cell">Secs</th>
+      </tr></thead>
+      <tbody>
+      {% for r in v.rule_rows %}
+        <tr>
+          <td>{{ r.rule_type }}</td>
+          <td>{{ r.column_name or '' }}</td>
+          <td class="status-cell" style="color:{{ r.color }}">{{ r.status }}</td>
+          <td>{{ r.source_value if r.source_value is not none else '' }}</td>
+          <td>{{ r.target_value if r.target_value is not none else '' }}</td>
+          <td>{{ r.difference if r.difference is not none else '' }}</td>
+          <td>{{ r.tolerance_applied or '' }}</td>
+          <td class="num-cell">{{ '%.2f'|format(r.duration_sec or 0) }}</td>
+        </tr>
+        {% if r.source_sql or r.target_sql or r.details_parsed %}
+        <tr><td colspan="8" style="padding-top:0">
+          <details class="sql-toggle"><summary>details / SQL</summary>
+            {% if r.details_parsed %}<pre>{{ r.details_parsed | tojson(indent=2) }}</pre>{% endif %}
+            {% if r.source_sql %}<pre>-- source
+{{ r.source_sql }}</pre>{% endif %}
+            {% if r.target_sql %}<pre>-- target
+{{ r.target_sql }}</pre>{% endif %}
+          </details>
+        </td></tr>
+        {% endif %}
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+    {% if v.mismatch_rows %}
+    <div class="section-label">Mismatch samples ({{ v.mismatch_rows|length }})</div>
+    <table>
+      <thead><tr>
+        <th>Type</th><th>Key</th><th>Column</th><th>Source</th><th>Target</th><th>Bucket</th>
+      </tr></thead>
+      <tbody>
+      {% for m in v.mismatch_rows %}
+        <tr>
+          <td>{{ m.mismatch_type }}</td>
+          <td>{{ m.key_values_parsed | tojson }}</td>
+          <td>{{ m.column_name or '' }}</td>
+          <td>{{ m.source_value if m.source_value is not none else '' }}</td>
+          <td>{{ m.target_value if m.target_value is not none else '' }}</td>
+          <td>{{ m.bucket_path or '' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </details>
+  {% endfor %}
+</main>
+<footer>Generated {{ generated_ts }} · DVF — metadata-driven data validation framework</footer>
+</body>
+</html>

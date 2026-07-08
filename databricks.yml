@@ -1,0 +1,86 @@
+# Databricks Asset Bundle — DVF deployment + scheduled jobs
+# Usage:
+#   databricks bundle validate -t dev
+#   databricks bundle deploy   -t dev
+#   databricks bundle run dvf_nightly_validation -t dev
+
+bundle:
+  name: dvf
+
+artifacts:
+  dvf_wheel:
+    type: whl
+    build: python -m build --wheel
+    path: .
+
+variables:
+  env_name:
+    description: DVF config environment (matches config/environments/*.yaml)
+    default: dev
+  node_type:
+    description: worker node type
+    default: m6i.xlarge
+  spark_version:
+    description: DBR version
+    default: 15.4.x-scala2.12
+
+resources:
+  jobs:
+    dvf_nightly_validation:
+      name: "DVF nightly validation (${var.env_name})"
+      schedule:
+        quartz_cron_expression: "0 0 5 * * ?"     # 05:00 UTC daily
+        timezone_id: UTC
+        pause_status: PAUSED                      # unpause when ready
+      email_notifications:
+        on_failure: []                            # add ops DL
+      tasks:
+        - task_key: run_validations
+          notebook_task:
+            notebook_path: notebooks/10_scheduled_driver
+            base_parameters:
+              env: ${var.env_name}
+              config_dir: ../config
+              execution_groups: ""                # blank = all enabled
+              run_name: nightly
+              fail_task_on: "FAILED"
+              send_email: "true"
+          job_cluster_key: dvf_cluster
+      job_clusters: &clusters
+        - job_cluster_key: dvf_cluster
+          new_cluster:
+            spark_version: ${var.spark_version}
+            node_type_id: ${var.node_type}
+            num_workers: 2
+            data_security_mode: SINGLE_USER
+            libraries: []   # attach wheel + JDBC/Cobrix jars per deployment-guide
+
+    dvf_retention_purge:
+      name: "DVF retention purge (${var.env_name})"
+      schedule:
+        quartz_cron_expression: "0 0 6 1 * ?"     # monthly, 1st 06:00 UTC
+        timezone_id: UTC
+        pause_status: PAUSED
+      tasks:
+        - task_key: purge
+          notebook_task:
+            notebook_path: notebooks/11_retention_purge
+            base_parameters:
+              env: ${var.env_name}
+              config_dir: ../config
+              dry_run: "false"
+          job_cluster_key: dvf_cluster
+      job_clusters: *clusters
+
+targets:
+  dev:
+    default: true
+    variables:
+      env_name: dev
+  qa:
+    variables:
+      env_name: qa
+  prod:
+    mode: production
+    variables:
+      env_name: prod

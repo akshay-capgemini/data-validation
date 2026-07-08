@@ -1,0 +1,39 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dvf"
+version = "0.1.0"
+description = "Enterprise metadata-driven Data Validation & Reconciliation Framework for Databricks (pushdown execution)"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Proprietary" }
+authors = [{ name = "Data Validation Framework Team" }]
+dependencies = [
+    "pydantic>=2.0",
+    "PyYAML>=6.0",
+    "Jinja2>=3.1",
+    "openpyxl>=3.1",
+]
+
+[project.optional-dependencies]
+snowflake = ["snowflake-connector-python>=3.0"]
+aws = ["boto3>=1.28"]
+pdf = ["xhtml2pdf>=0.2.11"]
+spark = ["pyspark>=3.4", "delta-spark>=2.4"]
+dev = ["pytest>=7.4", "pytest-cov>=4.1"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"dvf.dialects" = ["templates/**/*.j2"]
+"dvf.reporting" = ["templates/*.j2"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "spark: tests requiring a local SparkSession (may need winutils/WSL on Windows; authoritative run is notebook 09 on-cluster)",
+]
+addopts = "-q"

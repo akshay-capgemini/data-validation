@@ -1,0 +1,5 @@
+SELECT {{ part_expr }} AS part_key
+     , COUNT(*) AS cnt
+FROM {{ ref.from_clause }}
+{% if ref.where %}WHERE {{ ref.where }}{% endif %}
+GROUP BY {{ part_expr }}

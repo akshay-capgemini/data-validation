@@ -1,0 +1,7 @@
+SELECT
+{% for c in select_cols %}
+  {{ c.expr }} AS {{ c.alias }}{{ "" if loop.last else "," }}
+{% endfor %}
+FROM {{ ref.from_clause }}
+{% if ref.where %}WHERE {{ ref.where }}{% endif %}
+{% if order_by %}ORDER BY {{ order_by | join(', ') }}{% endif %}

@@ -1,0 +1,5 @@
+SELECT
+  COALESCE(CAST(CAST("id" AS INTEGER) AS TEXT), '<NULL>') AS k0,
+  dvf_md5((COALESCE(RTRIM("code"), '<NULL>') || '|~|' || COALESCE(RTRIM("name"), '<NULL>') || '|~|' || COALESCE(printf('%.6f', "amount"), '<NULL>') || '|~|' || COALESCE(printf('%.6f', "ratio"), '<NULL>') || '|~|' || COALESCE(CAST(CAST("units" AS INTEGER) AS TEXT), '<NULL>') || '|~|' || COALESCE(CASE WHEN "is_active" IS NULL THEN NULL WHEN "is_active" IN (0, '0', 'false', 'FALSE') THEN '0' ELSE '1' END, '<NULL>') || '|~|' || COALESCE(strftime('%Y-%m-%d', "born_on"), '<NULL>') || '|~|' || COALESCE((strftime('%Y-%m-%d %H:%M:%f', "updated_at") || '000'), '<NULL>'))) AS row_hash
+FROM "dq"."customers"
+WHERE (load_dt = '2026-01-01')

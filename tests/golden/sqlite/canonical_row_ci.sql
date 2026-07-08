@@ -1,0 +1,1 @@
+(COALESCE(CAST(CAST("id" AS INTEGER) AS TEXT), '<NULL>') || '|~|' || COALESCE(UPPER(RTRIM("code")), '<NULL>') || '|~|' || COALESCE(UPPER(RTRIM("name")), '<NULL>') || '|~|' || COALESCE(printf('%.6f', "amount"), '<NULL>'))

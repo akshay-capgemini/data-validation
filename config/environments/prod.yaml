@@ -1,0 +1,10 @@
+# PROD environment overlay (AWS Databricks)
+environment: prod
+catalog: dvf_prod
+secret_scope_default: dvf-prod
+engine:
+  max_parallel: 16
+reporting:
+  output_path: s3://REPLACE-ME-dq-prod/dvf/reports
+  email:
+    enabled: true

@@ -1,0 +1,9 @@
+SELECT COALESCE(SUM(dup_cnt - 1), 0) AS duplicate_rows
+     , COUNT(*) AS duplicate_keys
+FROM (
+  SELECT COUNT(*) AS dup_cnt
+  FROM {{ ref.from_clause }}
+  {% if ref.where %}WHERE {{ ref.where }}{% endif %}
+  GROUP BY {{ keys | join(', ') }}
+  HAVING COUNT(*) > 1
+) dvf_dup

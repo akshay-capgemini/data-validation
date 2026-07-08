@@ -1,0 +1,3 @@
+SELECT COUNT(*) AS row_count
+FROM {{ ref.from_clause }}
+{% if ref.where %}WHERE {{ ref.where }}{% endif %}

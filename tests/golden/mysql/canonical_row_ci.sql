@@ -1,0 +1,1 @@
+CONCAT(COALESCE(CAST(CAST(`id` AS SIGNED) AS CHAR), '<NULL>'), '|~|', COALESCE(UPPER(RTRIM(`code`)), '<NULL>'), '|~|', COALESCE(UPPER(RTRIM(`name`)), '<NULL>'), '|~|', COALESCE(CAST(CAST(`amount` AS DECIMAL(38,6)) AS CHAR), '<NULL>'))

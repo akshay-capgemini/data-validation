@@ -1,0 +1,1 @@
+(COALESCE(CAST(CAST("id" AS BIGINT) AS VARCHAR), '<NULL>') || '|~|' || COALESCE(UPPER(RTRIM("code")), '<NULL>') || '|~|' || COALESCE(UPPER(RTRIM("name")), '<NULL>') || '|~|' || COALESCE(CAST(CAST("amount" AS NUMERIC(38,6)) AS VARCHAR), '<NULL>'))

@@ -1,0 +1,6 @@
+# QA environment overlay (AWS Databricks)
+environment: qa
+catalog: dvf_qa
+secret_scope_default: dvf-qa
+reporting:
+  output_path: s3://REPLACE-ME-dq-qa/dvf/reports

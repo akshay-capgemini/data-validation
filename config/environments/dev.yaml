@@ -1,0 +1,6 @@
+# DEV environment overlay (AWS Databricks)
+environment: dev
+catalog: dvf_dev
+secret_scope_default: dvf-dev
+reporting:
+  output_path: s3://REPLACE-ME-dq-dev/dvf/reports

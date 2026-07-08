@@ -1,0 +1,9 @@
+SELECT
+  {{ bucket_expr }} AS bucket_id,
+  COUNT(*) AS cnt
+{% for s in sigs %}
+  , {{ s.expr }} AS {{ s.alias }}
+{% endfor %}
+FROM {{ ref.from_clause }}
+{% if ref.where %}WHERE {{ ref.where }}{% endif %}
+GROUP BY {{ bucket_expr }}

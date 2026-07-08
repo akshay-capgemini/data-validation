@@ -1,0 +1,4 @@
+SELECT COUNT(*) AS violation_count
+FROM {{ ref.from_clause }}
+WHERE ({{ predicate }})
+{% if ref.where %}  AND ({{ ref.where }}){% endif %}
